@@ -32,22 +32,3 @@ npm run preview  # serve o build de produção localmente
 npm run lint     # checagem de lint
 npm run format   # formata o código com prettier
 ```
-
-## Projetos (GitHub API)
-
-A seção "Selected work" busca automaticamente os repositórios públicos de
-[github.com/ArthurLeite-Dev](https://github.com/ArthurLeite-Dev) (excluindo forks e o
-repositório de perfil), ordenados por atividade recente, com o projeto **Co-Up**
-sempre fixado em primeiro. A lógica fica em `src/lib/github.ts`. Não é necessário
-nenhum token — a API pública do GitHub permite essa consulta sem autenticação
-(limite de 60 requisições/hora por IP).
-
-## Formulário de contato
-
-O formulário em "Let's build something" envia a mensagem por email via
-[FormSubmit](https://formsubmit.co), sem precisar de servidor, backend ou chave de
-API. **Na primeira mensagem enviada**, o FormSubmit manda um email de confirmação
-para o endereço configurado (`arthur.sl.work@gmail.com`) — é preciso clicar em
-"Activate Form" nesse email para que as próximas mensagens comecem a chegar.
-
-Para trocar o email de destino, edite `profile.email` em `src/lib/portfolio-data.ts`.

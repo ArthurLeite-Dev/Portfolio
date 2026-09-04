@@ -1,10 +1,11 @@
 import { motion, useScroll, useSpring, useTransform } from "motion/react";
 import { useRef } from "react";
-import { experience } from "@/lib/portfolio-data";
+import { useLanguage } from "@/lib/i18n";
 import { Reveal } from "./Reveal";
 import { SectionHeading } from "./SectionHeading";
 
 export function Experience() {
+  const { t } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -17,7 +18,7 @@ export function Experience() {
 
   return (
     <section id="experience" className="container-editorial scroll-mt-24 py-24 md:py-36">
-      <SectionHeading index="04 / 06" title="Experience" meta="2024 — hoje" />
+      <SectionHeading index="04 / 06" title={t.experience.title} meta={t.experience.meta} />
 
       <div ref={ref} className="relative mt-14 pl-6 md:mt-24 md:pl-10">
         <div aria-hidden className="absolute left-0 top-0 h-full w-px bg-border" />
@@ -28,7 +29,7 @@ export function Experience() {
         />
 
         <ol className="flex flex-col">
-          {experience.map((item, i) => (
+          {t.experience.items.map((item, i) => (
             <Reveal as="li" key={item.period} delay={i} className="relative py-8 md:py-12">
               <span
                 aria-hidden
@@ -48,7 +49,7 @@ export function Experience() {
                   </p>
                 </div>
               </div>
-              {i < experience.length - 1 && (
+              {i < t.experience.items.length - 1 && (
                 <span aria-hidden className="absolute bottom-0 left-0 h-px w-full bg-border" />
               )}
             </Reveal>

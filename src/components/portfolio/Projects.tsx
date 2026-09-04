@@ -1,172 +1,159 @@
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
-import { useRef, useState } from "react";
-import { usePointerFine } from "@/hooks/use-pointer-fine";
+import { motion } from "motion/react";
+import { useMemo, useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 import {
   formatRepoName,
-  GITHUB_PROFILE_URL,
+  GITHUB_REPOS_URL,
+  liveScreenshotUrl,
   repoPreviewImage,
   type GithubRepo,
 } from "@/lib/github";
+import { projectOverrides } from "@/lib/project-overrides";
 import { cn } from "@/lib/utils";
+import { MagneticButton } from "./MagneticButton";
 import { Reveal } from "./Reveal";
 import { SectionHeading } from "./SectionHeading";
 
 const ease = [0.16, 1, 0.3, 1] as const;
+const FEATURED_REPO = "PIT-game-matchmaking-platform";
 
 function ProjectCard({
   repo,
-  featured,
   dimmed,
   onHover,
+  githubLabel,
+  liveLabel,
+  fallbackDescription,
 }: {
   repo: GithubRepo;
-  featured: boolean;
   dimmed: boolean;
   onHover: (hovering: boolean) => void;
+  githubLabel: string;
+  liveLabel: string;
+  fallbackDescription: string;
 }) {
-  const fine = usePointerFine();
-  const ref = useRef<HTMLElement>(null);
   const [hovered, setHovered] = useState(false);
-  const [imageError, setImageError] = useState(false);
-
-  const px = useSpring(useMotionValue(0), { stiffness: 150, damping: 20 });
-  const py = useSpring(useMotionValue(0), { stiffness: 150, damping: 20 });
-  const rotateY = useTransform(px, [-0.5, 0.5], ["2.2deg", "-2.2deg"]);
-  const rotateX = useTransform(py, [-0.5, 0.5], ["-1.6deg", "1.6deg"]);
+  const [imageStage, setImageStage] = useState(0);
 
   const setHover = (v: boolean) => {
     setHovered(v);
     onHover(v);
-    if (!v) {
-      px.set(0);
-      py.set(0);
-    }
   };
 
-  const tech = [repo.language, ...repo.topics].filter((t): t is string => Boolean(t)).slice(0, 4);
+  const override = projectOverrides[repo.name];
+  const liveUrl = override?.liveUrl ?? repo.homepage ?? null;
+  const featured = repo.name === FEATURED_REPO;
+
+  // Tries, in order: a manually provided screenshot, then a live on-demand
+  // screenshot of the deployed site (once one exists), then GitHub's own
+  // auto-generated card. Falls back to no image at all if every source
+  // fails to load.
+  const imageCandidates = useMemo(() => {
+    const candidates: string[] = [];
+    if (override?.image) candidates.push(override.image);
+    if (liveUrl) candidates.push(liveScreenshotUrl(liveUrl));
+    candidates.push(repoPreviewImage(repo.full_name));
+    return candidates;
+  }, [override?.image, liveUrl, repo.full_name]);
+
+  const image = imageStage < imageCandidates.length ? imageCandidates[imageStage] : null;
+
+  const tech = [repo.language, ...repo.topics].filter((t): t is string => Boolean(t)).slice(0, 3);
   const title = formatRepoName(repo.name);
-  const description =
-    repo.description ?? "Repositório pessoal — veja o código e o histórico de commits no GitHub.";
+  const description = repo.description ?? fallbackDescription;
 
   return (
     <motion.article
-      ref={ref}
-      data-cursor="view"
-      className={cn("group relative", featured ? "col-span-full" : "col-span-full md:col-span-6")}
-      onMouseEnter={() => fine && setHover(true)}
-      onMouseLeave={() => fine && setHover(false)}
-      onMouseMove={(e) => {
-        if (!fine || !ref.current) return;
-        const r = ref.current.getBoundingClientRect();
-        px.set((e.clientX - r.left) / r.width - 0.5);
-        py.set((e.clientY - r.top) / r.height - 0.5);
-      }}
-      animate={{ opacity: dimmed && !hovered ? 0.45 : 1 }}
-      transition={{ duration: 0.5, ease }}
-      style={{ perspective: 1200 }}
+      className="group relative"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      animate={{ opacity: dimmed && !hovered ? 0.5 : 1 }}
+      transition={{ duration: 0.4, ease }}
     >
-      <motion.a
+      <a
         href={repo.html_url}
         target="_blank"
         rel="noreferrer noopener"
-        aria-label={`Abrir repositório ${title} no GitHub`}
-        className="block rounded-lg border border-transparent p-2 transition-colors duration-500 hover:border-border focus-visible:border-border sm:p-3"
-        {...(fine ? { style: { rotateX, rotateY, transformStyle: "preserve-3d" as const } } : {})}
-        whileTap={{ scale: 0.99 }}
-        {...(fine ? { whileHover: { scale: 1.008 } } : {})}
-        transition={{ type: "spring", stiffness: 200, damping: 24 }}
+        aria-label={`${title} — ${githubLabel}`}
+        className="block rounded-lg border border-transparent p-2 transition-colors duration-500 hover:border-border focus-visible:border-border"
       >
-        {!imageError && (
-          <div
-            className={cn(
-              "relative overflow-hidden rounded-md bg-card",
-              featured ? "aspect-[16/10] md:aspect-[21/9]" : "aspect-[4/3]",
-            )}
-          >
+        {image && (
+          <div className="relative aspect-[2/1] overflow-hidden rounded-md bg-card">
             <motion.img
-              src={repoPreviewImage(repo.full_name)}
-              alt={`Preview do repositório ${title}`}
-              width={1280}
-              height={640}
-              loading={featured ? "eager" : "lazy"}
-              onError={() => setImageError(true)}
+              src={image}
+              alt={`Preview — ${title}`}
+              width={1200}
+              height={600}
+              loading="lazy"
+              onError={() => setImageStage((s) => s + 1)}
               className="h-full w-full object-cover grayscale contrast-[1.05]"
-              animate={hovered ? { scale: 1.05, x: -6, y: -6 } : { scale: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.9, ease }}
+              animate={hovered ? { scale: 1.04 } : { scale: 1 }}
+              transition={{ duration: 0.7, ease }}
             />
-            <motion.div
+            <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-background"
-              animate={{ opacity: hovered ? 0.08 : 0.2 }}
-              transition={{ duration: 0.6, ease }}
+              className="pointer-events-none absolute inset-0 bg-background transition-opacity duration-500"
+              style={{ opacity: hovered ? 0.06 : 0.16 }}
             />
+            {featured && (
+              <span className="label-xs absolute left-2.5 top-2.5 rounded-full bg-background/85 px-2.5 py-1 backdrop-blur-sm">
+                ★
+              </span>
+            )}
           </div>
         )}
 
-        <div className="mt-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:mt-6">
+        <div className="mt-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-baseline gap-3">
-              <motion.h3
-                className={cn(
-                  "truncate font-display font-bold uppercase tracking-tight",
-                  featured ? "text-2xl sm:text-4xl lg:text-6xl" : "text-xl sm:text-2xl lg:text-3xl",
-                )}
-                animate={{ x: hovered ? 6 : 0 }}
-                transition={{ duration: 0.5, ease }}
-              >
-                {title}
-              </motion.h3>
-              {repo.stargazers_count > 0 && (
-                <span className="label-xs shrink-0">★ {repo.stargazers_count}</span>
-              )}
-            </div>
-            <p
-              className={cn(
-                "mt-3 text-sm leading-relaxed text-muted-foreground",
-                featured ? "max-w-2xl" : "max-w-md",
-              )}
-            >
-              {description}
-            </p>
-            {tech.length > 0 && (
-              <ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1">
-                {tech.map((t) => (
-                  <li key={t} className="label-xs">
-                    {t}
-                  </li>
-                ))}
-              </ul>
+            <h3 className="truncate font-display text-sm font-bold tracking-tight sm:text-base">
+              {title}
+            </h3>
+            {repo.stargazers_count > 0 && (
+              <span className="label-xs mt-0.5 block">★ {repo.stargazers_count}</span>
             )}
           </div>
-
           <motion.span
             aria-hidden
-            className="mt-1 font-display text-xl text-muted-foreground sm:text-2xl"
-            animate={{ x: hovered ? 8 : 0, opacity: hovered ? 1 : 0.55 }}
-            transition={{ duration: 0.5, ease }}
+            className="mt-0.5 shrink-0 font-display text-sm text-muted-foreground"
+            animate={{ x: hovered ? 4 : 0, opacity: hovered ? 1 : 0.5 }}
+            transition={{ duration: 0.4, ease }}
           >
             ↗
           </motion.span>
         </div>
-      </motion.a>
 
-      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 px-2 sm:px-3">
+        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+
+        {tech.length > 0 && (
+          <ul className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1">
+            {tech.map((t) => (
+              <li key={t} className="label-xs">
+                {t}
+              </li>
+            ))}
+          </ul>
+        )}
+      </a>
+
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-2">
         <a
           href={repo.html_url}
           target="_blank"
           rel="noreferrer noopener"
-          className="link-underline inline-flex min-h-11 items-center font-display text-[11px] uppercase tracking-[0.18em]"
+          className="link-underline inline-flex min-h-9 items-center font-display text-[10px] uppercase tracking-[0.16em]"
         >
-          GitHub
+          {githubLabel}
         </a>
-        {repo.homepage && (
+        {liveUrl && (
           <a
-            href={repo.homepage}
+            href={liveUrl}
             target="_blank"
             rel="noreferrer noopener"
-            className="link-underline inline-flex min-h-11 items-center font-display text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
+            className="link-underline inline-flex min-h-9 items-center font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground hover:text-foreground"
           >
-            Live
+            {liveLabel}
           </a>
         )}
       </div>
@@ -175,54 +162,51 @@ function ProjectCard({
 }
 
 export function Projects({ repos, error }: { repos: GithubRepo[]; error?: boolean }) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const { t } = useLanguage();
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   return (
     <section id="work" className="container-editorial scroll-mt-24 py-24 md:py-36">
       <SectionHeading
         index="03 / 06"
-        title="Selected work"
-        meta={repos.length > 0 ? `${repos.length} reposit\u00f3rios via GitHub` : "via GitHub API"}
+        title={t.projects.title}
+        meta={repos.length > 0 ? t.projects.metaWithCount(repos.length) : t.projects.metaFallback}
       />
 
-      <Reveal delay={1} className="mt-6">
-        <a
-          href={GITHUB_PROFILE_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="link-underline inline-flex items-center gap-2 font-display text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
-        >
-          Ver todos os repositórios ↗
-        </a>
-      </Reveal>
-
       {repos.length > 0 ? (
-        <div className="mt-10 grid grid-cols-12 gap-x-6 gap-y-16 md:mt-16 md:gap-y-28">
-          {repos.map((repo, i) => (
-            <Reveal key={repo.id} className={i === 0 ? "col-span-12" : "col-span-12 md:col-span-6"}>
-              <ProjectCard
-                repo={repo}
-                featured={i === 0}
-                dimmed={hoveredIndex !== null && hoveredIndex !== i}
-                onHover={(h) => setHoveredIndex(h ? i : null)}
-              />
-            </Reveal>
-          ))}
-        </div>
+        <>
+          <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
+            {repos.map((repo, i) => (
+              <Reveal key={repo.id} delay={Math.min(i, 4) * 0.5}>
+                <ProjectCard
+                  repo={repo}
+                  dimmed={hoveredId !== null && hoveredId !== repo.id}
+                  onHover={(h) => setHoveredId(h ? repo.id : null)}
+                  githubLabel={t.projects.github}
+                  liveLabel={t.projects.live}
+                  fallbackDescription={t.projects.fallbackDescription}
+                />
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal delay={2} className="mt-12 flex justify-center md:mt-16">
+            <MagneticButton href={GITHUB_REPOS_URL} className="w-full sm:w-auto">
+              {t.projects.viewAll}
+            </MagneticButton>
+          </Reveal>
+        </>
       ) : (
         <Reveal
           delay={2}
-          className="mt-14 border border-border p-8 text-sm text-muted-foreground md:mt-24 md:p-12"
+          className="mt-14 border border-border p-8 text-sm text-muted-foreground md:mt-20 md:p-12"
         >
-          {error
-            ? "Não foi possível carregar os repositórios agora (a API do GitHub pode estar limitando requisições). "
-            : "Nenhum repositório público encontrado por aqui no momento. "}
-          Veja a lista completa direto no{" "}
+          {error ? t.projects.emptyError : t.projects.emptyNone} {t.projects.emptySuffix}{" "}
           <a
-            href={GITHUB_PROFILE_URL}
+            href={GITHUB_REPOS_URL}
             target="_blank"
             rel="noreferrer noopener"
-            className="link-underline text-foreground"
+            className={cn("link-underline text-foreground")}
           >
             GitHub
           </a>

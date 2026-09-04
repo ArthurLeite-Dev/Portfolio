@@ -33,6 +33,7 @@ export function MagneticButton({
   const fine = usePointerFine();
   const x = useSpring(useMotionValue(0), { stiffness: 220, damping: 18 });
   const y = useSpring(useMotionValue(0), { stiffness: 220, damping: 18 });
+  const isExternal = /^https?:\/\//.test(href);
 
   return (
     <motion.a
@@ -40,6 +41,7 @@ export function MagneticButton({
       href={href}
       aria-label={ariaLabel}
       data-cursor="link"
+      {...(isExternal ? { target: "_blank", rel: "noreferrer noopener" } : {})}
       style={{ x, y }}
       {...(fine ? { whileHover: { scale: 1.03 } } : {})}
       whileTap={{ scale: 0.98 }}

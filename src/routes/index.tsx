@@ -12,11 +12,10 @@ import { Projects } from "@/components/portfolio/Projects";
 import { SpotlightBackground } from "@/components/portfolio/SpotlightBackground";
 import { TechStack } from "@/components/portfolio/TechStack";
 import { fetchGithubRepos, type GithubRepo } from "@/lib/github";
+import { translations } from "@/lib/i18n";
 import { profile } from "@/lib/portfolio-data";
 
-const title = `${profile.name} — ${profile.role}`;
-const description =
-  "Portfólio de Arthur Leite, desenvolvedor full-stack: projetos open source no GitHub, stack em TypeScript, React e Node.js, e experiência construindo sistemas de recomendação.";
+const { title, description } = translations.pt.meta;
 
 export const Route = createFileRoute("/")({
   loader: async (): Promise<{ repos: GithubRepo[]; reposError: boolean }> => {

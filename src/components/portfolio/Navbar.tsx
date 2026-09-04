@@ -1,9 +1,12 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { navLinks, profile } from "@/lib/portfolio-data";
+import { useLanguage } from "@/lib/i18n";
+import { profile } from "@/lib/portfolio-data";
 import { cn } from "@/lib/utils";
+import { LanguageToggle } from "./LanguageToggle";
 
 export function Navbar() {
+  const { t } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -39,7 +42,7 @@ export function Navbar() {
       >
         <nav
           aria-label="Principal"
-          className="container-editorial grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 md:h-20"
+          className="container-editorial grid h-16 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 md:h-20 md:gap-4"
         >
           <a
             href="#top"
@@ -50,7 +53,7 @@ export function Navbar() {
 
           <div className="hidden items-center gap-8 md:flex">
             <ul className="flex items-center gap-7">
-              {navLinks.map((l) => (
+              {t.nav.links.map((l) => (
                 <li key={l.href}>
                   <a
                     href={l.href}
@@ -65,16 +68,18 @@ export function Navbar() {
               href="#contact"
               className="rounded-full border border-border-strong px-5 py-2 font-display text-[11px] uppercase tracking-[0.18em] transition-colors duration-500 hover:bg-foreground hover:text-background"
             >
-              Let&apos;s talk
+              {t.nav.talk}
             </a>
           </div>
+
+          <LanguageToggle className="justify-self-end" />
 
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-controls="mobile-menu"
-            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
             className="-mr-2 flex h-12 w-12 shrink-0 items-center justify-center md:hidden"
           >
             <span className="relative block h-3 w-6">
@@ -106,7 +111,7 @@ export function Navbar() {
           >
             <nav aria-label="Menu mobile" className="container-editorial flex flex-1 flex-col">
               <ul className="flex flex-col">
-                {navLinks.map((l, i) => (
+                {t.nav.links.map((l, i) => (
                   <motion.li
                     key={l.href}
                     initial={{ opacity: 0, y: 24 }}
@@ -142,7 +147,7 @@ export function Navbar() {
                   onClick={() => setOpen(false)}
                   className="flex min-h-14 w-full items-center justify-center rounded-full bg-foreground font-display text-xs uppercase tracking-[0.2em] text-background"
                 >
-                  Entrar em contato
+                  {t.nav.mobileContact}
                 </a>
                 <p className="mt-6 text-center text-xs text-muted-foreground">{profile.email}</p>
               </motion.div>

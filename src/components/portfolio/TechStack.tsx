@@ -1,20 +1,21 @@
 import { motion } from "motion/react";
 import { useState } from "react";
 import { usePointerFine } from "@/hooks/use-pointer-fine";
-import { stack } from "@/lib/portfolio-data";
+import { useLanguage } from "@/lib/i18n";
 import { Reveal } from "./Reveal";
 import { SectionHeading } from "./SectionHeading";
 
 export function TechStack() {
   const fine = usePointerFine();
+  const { t } = useLanguage();
   const [active, setActive] = useState<number | null>(null);
 
   return (
     <section id="stack" className="container-editorial scroll-mt-24 py-24 md:py-36">
-      <SectionHeading index="02 / 06" title="Stack" meta="Ferramentas do dia a dia" />
+      <SectionHeading index="02 / 06" title={t.stack.title} meta={t.stack.meta} />
 
       <ul className="mt-12 border-t border-border md:mt-20" onMouseLeave={() => setActive(null)}>
-        {stack.map((tech, i) => (
+        {t.stack.items.map((tech, i) => (
           <Reveal as="li" key={tech.name} delay={i * 0.4} className="border-b border-border">
             <motion.div
               className="group relative flex items-center justify-between gap-4 py-4 md:py-6"

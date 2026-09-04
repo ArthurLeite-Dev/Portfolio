@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { usePointerFine } from "@/hooks/use-pointer-fine";
+import { useLanguage } from "@/lib/i18n";
 import { profile } from "@/lib/portfolio-data";
 import { cn } from "@/lib/utils";
 import { Reveal } from "./Reveal";
@@ -31,6 +32,7 @@ const fieldClass =
   "w-full border-b border-border bg-transparent py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-foreground sm:text-base";
 
 export function Contact() {
+  const { t } = useLanguage();
   const fine = usePointerFine();
   const [status, setStatus] = useState<Status>("idle");
   const [values, setValues] = useState(initialValues);
@@ -68,23 +70,25 @@ export function Contact() {
     }
   }
 
+  const [line1, line2, line3] = t.contact.heading;
+
   return (
     <section id="contact" className="container-editorial scroll-mt-24 py-24 md:py-40">
       <Reveal className="flex items-baseline justify-between gap-4 border-t border-border pt-4">
         <span className="label-xs">05 / 06</span>
-        <span className="label-xs">Disponível para novos projetos</span>
+        <span className="label-xs">{t.contact.available}</span>
       </Reveal>
 
       <Reveal delay={1}>
         <h2 className="display-hero mt-10 md:mt-16">
           <span className="block">
-            <BigWord>Let&apos;s</BigWord>
+            <BigWord>{line1}</BigWord>
           </span>
           <span className="block">
-            <BigWord>build</BigWord>
+            <BigWord>{line2}</BigWord>
           </span>
           <span className="block text-muted-foreground">
-            <BigWord>something.</BigWord>
+            <BigWord>{line3}</BigWord>
           </span>
         </h2>
       </Reveal>
@@ -94,13 +98,13 @@ export function Contact() {
           <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
             <div className="grid gap-6 sm:grid-cols-2">
               <label className="flex flex-col gap-2">
-                <span className="label-xs">Nome</span>
+                <span className="label-xs">{t.contact.nameLabel}</span>
                 <input
                   required
                   type="text"
                   name="name"
                   autoComplete="name"
-                  placeholder="Seu nome"
+                  placeholder={t.contact.namePlaceholder}
                   value={values.name}
                   onChange={handleChange("name")}
                   disabled={status === "sending"}
@@ -108,13 +112,13 @@ export function Contact() {
                 />
               </label>
               <label className="flex flex-col gap-2">
-                <span className="label-xs">Email</span>
+                <span className="label-xs">{t.contact.emailLabel}</span>
                 <input
                   required
                   type="email"
                   name="email"
                   autoComplete="email"
-                  placeholder="voce@email.com"
+                  placeholder={t.contact.emailPlaceholder}
                   value={values.email}
                   onChange={handleChange("email")}
                   disabled={status === "sending"}
@@ -124,12 +128,12 @@ export function Contact() {
             </div>
 
             <label className="flex flex-col gap-2">
-              <span className="label-xs">Mensagem</span>
+              <span className="label-xs">{t.contact.messageLabel}</span>
               <textarea
                 required
                 name="message"
                 rows={4}
-                placeholder="Conte um pouco sobre o projeto, a vaga ou a ideia..."
+                placeholder={t.contact.messagePlaceholder}
                 value={values.message}
                 onChange={handleChange("message")}
                 disabled={status === "sending"}
@@ -156,7 +160,7 @@ export function Contact() {
                 transition={{ type: "spring", stiffness: 260, damping: 22 }}
                 className="group relative inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-foreground px-8 py-3 font-display text-xs uppercase tracking-[0.18em] text-background transition-colors duration-500 hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-60 sm:px-8"
               >
-                <span>{status === "sending" ? "Enviando..." : "Get in touch"}</span>
+                <span>{status === "sending" ? t.contact.submitSending : t.contact.submitIdle}</span>
                 <span
                   aria-hidden
                   className="inline-block transition-transform duration-500 group-hover:translate-x-1.5"
@@ -167,12 +171,12 @@ export function Contact() {
 
               {status === "sent" && (
                 <p role="status" className="text-sm text-muted-foreground">
-                  Mensagem enviada — retorno em breve.
+                  {t.contact.sentMessage}
                 </p>
               )}
               {status === "error" && (
                 <p role="alert" className="text-sm text-muted-foreground">
-                  Algo deu errado. Tente de novo ou escreva direto para{" "}
+                  {t.contact.errorMessage}{" "}
                   <a href={`mailto:${profile.email}`} className="link-underline text-foreground">
                     {profile.email}
                   </a>
@@ -185,7 +189,7 @@ export function Contact() {
 
         <Reveal delay={3} className="flex flex-col gap-6 md:col-span-5">
           <div>
-            <p className="label-xs">Ou, direto no email</p>
+            <p className="label-xs">{t.contact.orEmail}</p>
             <a
               href={`mailto:${profile.email}`}
               className="link-underline mt-3 inline-block text-base text-muted-foreground transition-colors hover:text-foreground sm:text-lg"

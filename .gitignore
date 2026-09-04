@@ -7,34 +7,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules/
-dist/
-dist-ssr/
-.output/
+node_modules
+dist
+dist-ssr
+.output
 .vinxi
 .tanstack/**
 .nitro
 *.local
 *.tsbuildinfo
 
-# Environment files and secrets
-.env
-.env.*
-!.env.example
-
-# Tool caches and test reports
-.cache/
-.eslintcache
-.stylelintcache
-.parcel-cache/
-.turbo/
-coverage/
-playwright-report/
-test-results/
-
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+
+# Environment variables
+.env
+.env.local
+.env.*.local
 
 # Editor directories and files
 .vscode/*
